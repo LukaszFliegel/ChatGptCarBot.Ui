@@ -1,10 +1,24 @@
-// src/components/Chat.tsx
 import { Button, Input } from 'antd';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+function generateRandomGuid(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
 
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<string[]>([]);
   const [newMessage, setNewMessage] = useState<string>('');
+  const [userGuid, setUserGuid] = useState<string>('');
+
+  useEffect(() => {
+    // Generate a random guid when the component mounts (new user)
+    const guid = generateRandomGuid();
+    setUserGuid(guid);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewMessage(e.target.value);
@@ -14,14 +28,14 @@ const Chat: React.FC = () => {
     e.preventDefault();
     if (newMessage.trim() === '') return;
 
-    // Send a POST request to the backend API with the 'prompt' parameter
+    // Send a POST request to the backend API with the 'guid' field
     try {
       const response = await fetch('https://localhost:7011/Chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: newMessage }), // Include 'prompt' parameter
+        body: JSON.stringify({ Prompt: newMessage, guid: userGuid }), // Include 'guid' field
       });
 
       if (response.ok) {
@@ -39,9 +53,9 @@ const Chat: React.FC = () => {
   return (
     <div className="chat">
       <div className="chat-messages">
-        <div  className="chat-message">
-            I am here to help you pick a car you want!
-          </div>
+        <div className="chat-message">
+          I am here to help you pick a car you want!
+        </div>
         {messages.map((message, index) => (
           <div key={index} className="chat-message">
             {message}
@@ -54,10 +68,9 @@ const Chat: React.FC = () => {
           placeholder="Type a message..."
           value={newMessage}
           onChange={handleInputChange}
-          className='promptImput'
         />
         <Button type="primary" htmlType="submit">
-            Send
+          Send
         </Button>
       </form>
     </div>
